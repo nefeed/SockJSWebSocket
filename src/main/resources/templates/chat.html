@@ -1,0 +1,49 @@
+<!--
+  User: Gavin
+  E-mail: GavinChangCN@163.com
+  Desc: 
+  Date: 2017-03-06
+  Time: 14:37
+-->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>聊天室</title>
+    <script th:src="@{sockjs.min.js}"></script>
+    <script th:src="@{stomp.min.js}"></script>
+    <script th:src="@{jquery-3.1.1.min.js}"></script>
+</head>
+<body>
+<p>聊天室</p>
+<form id="contentForm">
+    <textarea name="chatContent" id="chatInput" cols="60" rows="4"></textarea>
+    <input type="submit" />
+</form>
+
+<script th:inline="javascript">
+    $('#contentForm').submit(function (e) {
+        e.preventDefault()
+        var chatContent = $('#contentForm').find('textarea[name="chatContent"]').val()
+        sendSpittle(chatContent)
+    })
+    var sock = new SockJS('/endpointChat')
+    var stomp = Stomp.over(sock)
+    stomp.connect('guest', 'guest', function(frame) {
+        stomp.subscribe("/user/queue/notifications", handleNotification)
+    })
+    function handleNotification(message) {
+        $('#output').append('<b>Received：' + message.body + '</b><br />')
+    }
+
+    function sendSpittle(text) {
+        stomp.send('/chat', {}, text)
+    }
+
+    $('#stop').click(function() {sock.close()})
+
+</script>
+
+<div id="output"></div>
+</body>
+</html>
